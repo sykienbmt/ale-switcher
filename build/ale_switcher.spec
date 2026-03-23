@@ -83,10 +83,14 @@ if IS_MAC:
         name='AleSwitcher',
     )
 
+    # Use .icns if available, fallback to .png
+    _icns = ROOT / 'build' / 'rsrc' / 'icon.icns'
+    _icon_mac = str(_icns) if _icns.exists() else str(ROOT / 'ale_switcher' / 'icon.png')
+
     app = BUNDLE(
         coll,
         name='AleSwitcher.app',
-        icon=str(ROOT / 'build' / 'rsrc' / 'icon.icns'),
+        icon=_icon_mac,
         bundle_identifier='com.aletech.aleswitcher',
         info_plist={
             'CFBundleShortVersionString': '2.0.0',

@@ -52,7 +52,13 @@ jobs:
       - name: Create icns icon
         run: |
           mkdir -p build/rsrc
-          sips -s format icns ale_switcher/icon.png --out build/rsrc/icon.icns 2>/dev/null || true
+          mkdir -p icon.iconset
+          for size in 16 32 64 128 256 512; do
+            sips -z $size $size ale_switcher/icon.png --out icon.iconset/icon_${size}x${size}.png 2>/dev/null || true
+            double=$((size * 2))
+            sips -z $double $double ale_switcher/icon.png --out icon.iconset/icon_${size}x${size}@2x.png 2>/dev/null || true
+          done
+          iconutil -c icns icon.iconset -o build/rsrc/icon.icns 2>/dev/null || true
 
       - name: Build app
         run: python build/build.py
