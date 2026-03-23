@@ -50,7 +50,26 @@ class Api:
             account = switching.switch_to(identifier)
             return {'success': True, 'account': self._account_to_dict(account)}
         except Exception as e:
-            return {'error': str(e)}
+            traceback.print_exc()
+            return {'error': f'{type(e).__name__}: {e}'}
+
+    def get_oauth_token(self, identifier: str) -> Dict[str, Any]:
+        """Get OAuth token for account (for macOS env var mode)."""
+        try:
+            switching = self._factory.get_switching_service()
+            account = switching.switch_to(identifier, token_only=True)
+            creds = account.get_credentials()
+            token = creds.get('claudeAiOauth', {}).get('accessToken', '')
+            label = account.nickname or account.display_name or account.email
+            return {
+                'success': True,
+                'account': self._account_to_dict(account),
+                'token': token,
+                'label': label,
+            }
+        except Exception as e:
+            traceback.print_exc()
+            return {'error': f'{type(e).__name__}: {e}'}
 
     def select_optimal(self, dry_run: bool = False) -> Dict[str, Any]:
         try:

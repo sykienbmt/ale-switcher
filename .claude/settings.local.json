@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python:*)",
+      "Read(//c/Users/admin/AppData/Local/Programs/Python/**)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Bash(cmd.exe /c \"where python\")",
+      "Bash(/c/Users/admin/AppData/Local/Programs/Python/Python313/python.exe -m c2switcher --debug)",
+      "Bash(gh repo:*)",
+      "Bash(git clone:*)",
+      "Read(//c/Program Files \\(x86\\)/Inno Setup 6/**)",
+      "Read(//c/Program Files/Inno Setup 6/**)",
+      "Bash(\"/c/Program Files \\(x86\\)/Inno Setup 6/ISCC.exe\" build/installer.iss)",
+      "Bash(for f:*)",
+      "Bash(do sed:*)",
+      "Bash(done)",
+      "Bash(mv c2switcher.spec ale_switcher.spec)",
+      "Bash(sed -i 's/c2switcher/ale_switcher/g; s/C2Switcher/AleSwitcher/g' ale_switcher.spec)",
+      "Bash(mkdir -p build/rsrc)",
+      "Bash(/c/Users/admin/AppData/Local/Programs/Python/Python313/python.exe -c \":*)",
+      "Bash(/c/Users/admin/AppData/Local/Programs/Python/Python313/python.exe build/build.py)",
+      "Bash(taskkill //F //IM AleSwitcher.exe)",
+      "Bash(rm -rf d:/projects/claude-switch/dist/AleSwitcher)",
+      "Bash(sed -i 's/version = \"\"\"\"2.0.0\"\"\"\"/version = \"\"\"\"2.0.1\"\"\"\"/' pyproject.toml)",
+      "Bash(sed -i 's/\"\"\"\"2.0.0\"\"\"\"/\"\"\"\"2.0.1\"\"\"\"/' build/installer.iss)",
+      "Bash(d:/projects/claude-switch/.gitignore:*)",
+      "Bash(where gh.exe)",
+      "Read(//c/Program Files/GitHub CLI/**)",
+      "Read(//c/Users/admin/AppData/Local/Programs/gh/**)",
+      "Bash(winget install:*)",
+      "Bash(powershell.exe -Command \"winget install --id GitHub.cli -e --accept-package-agreements --accept-source-agreements\")"
+    ]
+  }
+}
