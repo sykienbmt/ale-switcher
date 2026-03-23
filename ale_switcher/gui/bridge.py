@@ -113,15 +113,6 @@ class Api:
                 if acc.api_key and acc.api_key == token:
                     return self._account_to_dict(acc)
 
-            # Auto-import: credentials file exists but no matching account registered
-            if token:
-                try:
-                    account_service = self._factory.get_account_service()
-                    account, _ = account_service.add_account(creds_text)
-                    return self._account_to_dict(account)
-                except Exception:
-                    pass
-
             return {'error': 'Active account not found in registered accounts'}
         except Exception as e:
             return {'error': str(e)}
