@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/tailwind.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/alpine.min.js" defer></script>
   <style>
     html, body { background-color: #FAFBFC; overscroll-behavior: none; height: 100%; overflow: hidden; margin: 0; padding: 0; }
@@ -23,494 +24,240 @@
     * { -webkit-tap-highlight-color: transparent; }
   </style>
 </head>
-<body class="bg-[#FAFBFC] text-gray-800 h-screen flex flex-col font-sans antialiased" x-data="app()" x-init="init()">
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col font-sans antialiased" x-data="app()" x-init="init()">
 
   <!-- ============ NAVBAR ============ -->
-  <nav class="sticky top-0 z-50 bg-[#FAFBFC]">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex items-center h-16 gap-4">
+  <nav class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-5">
+      <div class="flex items-center h-12 gap-2">
         <!-- Logo -->
-        <div class="flex items-center gap-2.5 shrink-0 min-w-0 basis-[180px]">
-          <img src="img/icon.png" alt="AleSwitcher" class="w-8 h-8 rounded-lg shadow-md shrink-0">
-          <span class="text-sm font-bold text-gray-900 tracking-tight hidden sm:inline whitespace-nowrap">AleSwitcher</span>
-        </div>
-
-        <!-- Centered Pill Navigation -->
-        <div class="flex-1 flex justify-center">
-          <div class="flex items-center gap-1 bg-gray-100 rounded-full p-1">
-            <template x-for="item in navItems" :key="item.id">
-              <button
-                @click="page = item.id"
-                :class="page === item.id
-                  ? 'bg-gray-900 text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'"
-                class="px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5">
-                <span x-html="item.icon" class="shrink-0 inline-flex"></span>
-                <span class="hidden md:inline" x-text="item.label"></span>
-              </button>
-            </template>
-          </div>
-        </div>
-
-        <!-- Right: Refresh + Active indicator -->
         <div class="flex items-center gap-2 shrink-0">
-          <button
-            @click="refreshAll()"
-            :disabled="loading"
-            :class="loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-600'"
-            class="p-2 bg-blue-500 text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-            title="Refresh all data">
-            <svg class="w-4 h-4" :class="loading && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-          </button>
-          <!-- Active account pill -->
-          <div x-show="currentAccount" x-transition
-               class="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span class="text-xs font-medium text-emerald-700 truncate max-w-[120px]" x-text="currentAccount?.nickname || currentAccount?.email || ''"></span>
-          </div>
+          <img src="img/icon.png" alt="AleSwitcher" style="width:24px;height:24px;border-radius:6px;" class="shadow-sm shrink-0">
+          <span class="text-sm font-bold text-gray-900 tracking-tight">AleSwitcher</span>
         </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Active account pill -->
+        <div x-show="currentAccount" x-cloak
+             class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span class="text-xs font-medium text-emerald-700 truncate max-w-[160px]" x-text="currentAccount?.nickname || currentAccount?.email || ''"></span>
+        </div>
+
+        <!-- Smart Switch -->
+        <button
+          @click="switchOptimal()"
+          :disabled="loading"
+          class="px-3 py-1.5 bg-indigo-500 text-white text-xs font-medium rounded-lg hover:bg-indigo-600 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+          title="Auto-select best account">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          <span class="hidden sm:inline">Smart Switch</span>
+        </button>
+
+        <!-- Add Account -->
+        <button @click="loginOAuth()"
+                :disabled="loading"
+                class="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span class="hidden sm:inline">Add Account</span>
+        </button>
+
+        <!-- Refresh -->
+        <button
+          @click="refreshAll()"
+          :disabled="loading"
+          class="p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+          title="Refresh all data">
+          <svg class="w-4 h-4" :class="loading && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
       </div>
     </div>
   </nav>
 
   <!-- ============ MAIN CONTENT ============ -->
   <main class="flex-1 overflow-y-auto overflow-x-hidden">
-    <div class="max-w-7xl mx-auto px-6 py-5 space-y-4">
+    <div class="max-w-7xl mx-auto px-5 py-4">
 
-      <!-- ==================== DASHBOARD ==================== -->
-      <div x-show="page === 'dashboard'" x-cloak x-transition:enter="animate-fade-in">
-
-        <!-- Greeting -->
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">
-              <span x-text="'Hello, ' + (currentAccount?.nickname || currentAccount?.email?.split('@')[0] || 'User')"></span>
-            </h1>
-          </div>
-          <div class="flex gap-2">
-            <button @click="loginOAuth()"
-                    class="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              <span class="hidden sm:inline">Add Account</span>
-            </button>
-          </div>
+      <!-- Stats + Search -->
+      <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+          <span><span class="font-bold text-gray-800" x-text="accounts.length"></span> accounts</span>
+          <span class="text-gray-300">|</span>
+          <span class="flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+            <span class="font-medium text-gray-700 truncate max-w-[120px]" x-text="currentAccount?.nickname || currentAccount?.email?.split('@')[0] || 'None'"></span>
+          </span>
         </div>
 
-        <!-- Stats Cards - 4 columns -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <!-- Total Accounts -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-              <div class="p-1.5 bg-blue-50 rounded-md">
-                <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-2xl font-bold text-gray-900 mb-0.5" x-text="accounts.length"></div>
-            <div class="text-xs text-gray-500">Total Accounts</div>
-          </div>
-          <!-- Active Account -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-              <div class="p-1.5 bg-emerald-50 rounded-md">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-sm font-bold text-gray-900 mb-0.5 truncate" x-text="currentAccount?.nickname || currentAccount?.email || 'None'"></div>
-            <div class="text-xs text-gray-500">Active Account</div>
-          </div>
-          <!-- Pro / Max Accounts -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-              <div class="p-1.5 bg-purple-50 rounded-md">
-                <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-2xl font-bold text-gray-900 mb-0.5" x-text="accounts.filter(a => a.has_claude_pro || a.has_claude_max).length"></div>
-            <div class="text-xs text-gray-500">Pro / Max</div>
-          </div>
-          <!-- Active Sessions -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-2">
-              <div class="p-1.5 bg-orange-50 rounded-md">
-                <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-2xl font-bold text-gray-900 mb-0.5" x-text="sessions.length"></div>
-            <div class="text-xs text-gray-500">Active Sessions</div>
-          </div>
+        <div class="relative flex-1 max-w-xs">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+          </svg>
+          <input type="text" placeholder="Search accounts..."
+                 x-model="searchQuery"
+                 class="w-full pl-9 pr-3 py-1.5 bg-white text-sm text-gray-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400">
         </div>
 
-        <!-- Two Column: Current Account + Smart Switch -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <!-- Current Account Card -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col">
-            <h2 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              Current Account
-            </h2>
-            <template x-if="!currentAccount">
-              <div class="text-center py-4 text-gray-400 text-sm">No active account</div>
-            </template>
-            <template x-if="currentAccount">
-              <div class="space-y-3 flex-1">
-                <div class="flex items-center gap-2">
-                  <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
-                  </svg>
-                  <span class="text-sm font-medium text-gray-700 truncate" x-text="currentAccount?.email"></span>
-                  <template x-if="currentAccount?.has_claude_max">
-                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-bold shadow-sm shrink-0">MAX</span>
-                  </template>
-                  <template x-if="currentAccount?.has_claude_pro && !currentAccount?.has_claude_max">
-                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-sm shrink-0">PRO</span>
-                  </template>
-                </div>
-                <!-- Usage Bars -->
-                <template x-for="bar in getUsageBars(currentAccount)" :key="bar.label">
-                  <div class="space-y-1.5">
-                    <div class="flex justify-between items-baseline">
-                      <span class="text-xs font-medium text-gray-600" x-text="bar.label"></span>
-                      <span class="text-xs font-bold" :class="bar.colorClass" x-text="bar.value + '%'"></span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-700"
-                           :class="bar.barClass"
-                           :style="'width: ' + bar.value + '%'"></div>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </template>
-            <div class="mt-auto pt-3">
-              <button @click="page = 'accounts'"
-                      class="w-full px-3 py-1.5 text-xs text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                Switch Account
-              </button>
-            </div>
-          </div>
-
-          <!-- Smart Switch -->
-          <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col">
-            <h2 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-              Smart Switch
-            </h2>
-            <p class="text-xs text-gray-400 mb-4">Auto-select optimal account based on usage & load balancing</p>
-            <div class="flex-1"></div>
-            <button
-              @click="switchOptimal()"
-              :disabled="loading"
-              :class="loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-600'"
-              class="w-full bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-              Switch to Optimal
-            </button>
-            <div x-show="optimalResult" x-transition class="mt-3 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 font-mono border border-gray-100">
-              <span x-text="optimalResult"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="grid grid-cols-2 gap-3">
-          <button @click="page = 'accounts'"
-                  class="bg-indigo-50 rounded-lg p-3 shadow-sm border border-indigo-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center justify-between group cursor-pointer">
-            <span class="text-indigo-700 font-medium text-sm">View All Accounts</span>
-            <svg class="w-4 h-4 text-indigo-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-            </svg>
-          </button>
-          <button @click="page = 'sessions'"
-                  class="bg-purple-50 rounded-lg p-3 shadow-sm border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all flex items-center justify-between group cursor-pointer">
-            <span class="text-purple-700 font-medium text-sm">View Sessions</span>
-            <svg class="w-4 h-4 text-purple-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-            </svg>
-          </button>
+        <!-- Smart switch result -->
+        <div x-show="optimalResult" x-cloak x-transition
+             class="flex-1 text-xs text-gray-600 bg-indigo-50 rounded-lg px-3 py-1.5 font-mono border border-indigo-100 truncate">
+          <span x-text="optimalResult"></span>
         </div>
       </div>
 
-      <!-- ==================== ACCOUNTS ==================== -->
-      <div x-show="page === 'accounts'" x-cloak x-transition:enter="animate-fade-in">
-        <!-- Toolbar -->
-        <div class="flex items-center gap-2 mb-4">
-          <!-- Add Account -->
-          <button @click="loginOAuth()"
-                  class="px-2.5 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                  title="Add Account">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            <span class="hidden sm:inline">Add Account</span>
-          </button>
+      <!-- Account Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-fade-in">
+        <template x-for="acc in filteredAccounts" :key="acc.uuid">
+          <div class="flex flex-col p-3 rounded-xl border transition-all hover:shadow-md"
+               :class="currentAccount?.uuid === acc.uuid
+                 ? 'bg-blue-50 border-blue-200 shadow-sm'
+                 : 'bg-white border-gray-100'">
 
-          <!-- Refresh All -->
-          <button @click="refreshAll()"
-                  :disabled="loading"
-                  :class="loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-600'"
-                  class="px-2.5 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                  title="Refresh All">
-            <svg class="w-3.5 h-3.5" :class="loading && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            <span class="hidden sm:inline" x-text="loading ? 'Loading...' : 'Refresh All'"></span>
-          </button>
+            <!-- Header: name + badges + Switch button -->
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-sm truncate mb-1"
+                    :class="currentAccount?.uuid === acc.uuid ? 'text-blue-700' : 'text-gray-900'"
+                    x-text="acc.nickname || acc.display_name || acc.email"></h3>
+                <div class="flex items-center gap-1 flex-wrap">
+                  <template x-if="currentAccount?.uuid === acc.uuid">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold border border-blue-200">ACTIVE</span>
+                  </template>
+                  <template x-if="acc.has_claude_max">
+                    <span class="px-1.5 py-0.5 rounded bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-bold">MAX</span>
+                  </template>
+                  <template x-if="acc.has_claude_pro && !acc.has_claude_max">
+                    <span class="px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold">PRO</span>
+                  </template>
+                  <template x-if="acc.org_uuid && !acc.has_claude_pro && !acc.has_claude_max">
+                    <span class="px-1.5 py-0.5 rounded bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-[10px] font-bold"
+                          x-text="acc.org_type === 'enterprise' ? 'ENTERPRISE' : 'TEAM'"></span>
+                  </template>
+                  <template x-if="!acc.org_uuid && !acc.has_claude_pro && !acc.has_claude_max">
+                    <span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-bold border border-gray-200">FREE</span>
+                  </template>
+                </div>
+              </div>
 
-          <div class="flex-1"></div>
+              <!-- Switch button - prominent top-right -->
+              <button
+                @click="switchTo(acc)"
+                :disabled="currentAccount?.uuid === acc.uuid || switchingId === acc.uuid"
+                :class="currentAccount?.uuid === acc.uuid
+                  ? 'bg-blue-100 text-blue-400 cursor-not-allowed'
+                  : switchingId === acc.uuid
+                    ? 'bg-blue-100 text-blue-500 cursor-not-allowed'
+                    : 'bg-gray-900 text-white hover:bg-gray-700 cursor-pointer shadow-sm'"
+                class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                <svg class="w-3 h-3" :class="switchingId === acc.uuid && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span x-text="currentAccount?.uuid === acc.uuid ? 'Active' : switchingId === acc.uuid ? '...' : 'Switch'"></span>
+              </button>
+            </div>
 
-          <!-- Search -->
-          <div class="relative hidden md:block">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
-            </svg>
-            <input type="text" placeholder="Search accounts..."
-                   x-model="searchQuery"
-                   class="w-40 pl-9 pr-3 py-2 bg-white text-sm text-gray-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 transition-all focus:w-48">
+            <!-- Usage bars -->
+            <div class="flex-1 space-y-2 mb-2">
+              <template x-for="bar in getUsageBars(acc)" :key="bar.label">
+                <div>
+                  <div class="flex justify-between items-center text-[10px] mb-0.5">
+                    <span class="text-gray-500 font-medium" x-text="bar.label"></span>
+                    <span class="font-mono font-bold" :class="bar.colorClass" x-text="bar.value + '%'"></span>
+                  </div>
+                  <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-700"
+                         :class="bar.barClass"
+                         :style="'width: ' + bar.value + '%'"></div>
+                  </div>
+                </div>
+              </template>
+              <p x-show="acc.usage_error" class="text-[10px] text-red-500 font-mono truncate" x-text="acc.usage_error"></p>
+            </div>
+
+            <!-- Footer: email + refresh/info icons -->
+            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+              <span class="text-[10px] text-gray-400 truncate flex-1 min-w-0 font-mono" x-text="acc.email"></span>
+              <div class="flex items-center gap-0.5 shrink-0 ml-1">
+                <button
+                  @click="forceRefresh(acc)"
+                  :disabled="refreshingIds.has(acc.uuid)"
+                  :class="refreshingIds.has(acc.uuid) ? 'text-emerald-500 cursor-not-allowed' : 'text-gray-300 hover:text-emerald-500 cursor-pointer'"
+                  class="p-1 rounded transition-all"
+                  title="Refresh token">
+                  <svg class="w-3 h-3" :class="refreshingIds.has(acc.uuid) && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                </button>
+                <button
+                  @click="showAccountDetails(acc)"
+                  class="p-1 text-gray-300 hover:text-sky-500 rounded transition-all cursor-pointer"
+                  title="Account details">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
+        </template>
+      </div>
+
+      <!-- Empty states -->
+      <template x-if="filteredAccounts.length === 0 && accounts.length > 0">
+        <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center mt-4">
+          <p class="text-gray-400 text-sm">No accounts match your search</p>
         </div>
+      </template>
+      <template x-if="accounts.length === 0 && !loading">
+        <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center mt-4">
+          <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+          </svg>
+          <p class="text-gray-400 mb-3">No accounts yet</p>
+          <button @click="loginOAuth()"
+                  class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
+            Add Account
+          </button>
+        </div>
+      </template>
 
-        <!-- Account Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <template x-for="acc in filteredAccounts" :key="acc.uuid">
-            <div class="flex flex-col p-3 rounded-xl border transition-all hover:shadow-md"
-                 :class="currentAccount?.uuid === acc.uuid
-                   ? 'bg-blue-50/30 border-blue-200 shadow-sm'
-                   : 'bg-white border-gray-100'">
-              <!-- Header -->
-              <div class="flex items-start gap-3 mb-2">
-                <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-                  <h3 class="font-semibold text-sm truncate"
-                      :class="currentAccount?.uuid === acc.uuid ? 'text-blue-700' : 'text-gray-900'"
-                      x-text="acc.nickname || acc.display_name || acc.email"></h3>
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <template x-if="currentAccount?.uuid === acc.uuid">
-                      <span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold shadow-sm border border-blue-200/50">ACTIVE</span>
-                    </template>
-                    <template x-if="acc.has_claude_max">
-                      <span class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-bold shadow-sm">
-                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M6 3a3 3 0 00-3 3v2.25a3 3 0 003 3h2.25a3 3 0 003-3V6a3 3 0 00-3-3H6zM15.75 3a3 3 0 00-3 3v2.25a3 3 0 003 3H18a3 3 0 003-3V6a3 3 0 00-3-3h-2.25zM6 12.75a3 3 0 00-3 3V18a3 3 0 003 3h2.25a3 3 0 003-3v-2.25a3 3 0 00-3-3H6zM17.625 13.5a.75.75 0 00-1.5 0v2.625H13.5a.75.75 0 000 1.5h2.625v2.625a.75.75 0 001.5 0v-2.625h2.625a.75.75 0 000-1.5h-2.625V13.5z"/></svg>
-                        MAX
-                      </span>
-                    </template>
-                    <template x-if="acc.has_claude_pro && !acc.has_claude_max">
-                      <span class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-sm">
-                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12.378 1.602a.75.75 0 00-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 00.372-.648V7.93zM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 00.372.648l8.628 5.033z"/></svg>
-                        PRO
-                      </span>
-                    </template>
-                    <template x-if="!acc.has_claude_pro && !acc.has_claude_max">
-                      <span class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] font-bold shadow-sm border border-gray-200">FREE</span>
-                    </template>
-                  </div>
+      <!-- Loading skeleton -->
+      <template x-if="accounts.length === 0 && loading">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-1">
+          <template x-for="i in [1,2,3,4]" :key="i">
+            <div class="bg-white rounded-xl border border-gray-100 p-3 animate-pulse">
+              <div class="flex justify-between mb-3">
+                <div class="space-y-1.5 flex-1">
+                  <div class="h-3.5 bg-gray-100 rounded w-3/4"></div>
+                  <div class="h-2.5 bg-gray-100 rounded w-1/3"></div>
                 </div>
+                <div class="h-7 w-16 bg-gray-100 rounded-lg"></div>
               </div>
-
-              <!-- Usage bars -->
-              <div class="flex-1 px-1 mb-2 space-y-2">
-                <template x-for="bar in getUsageBars(acc)" :key="bar.label">
-                  <div>
-                    <div class="flex justify-between items-center text-[10px] mb-1">
-                      <span class="text-gray-500 font-medium" x-text="bar.label"></span>
-                      <span class="font-mono font-bold" :class="bar.colorClass" x-text="bar.value + '%'"></span>
-                    </div>
-                    <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full transition-all duration-700"
-                           :class="bar.barClass"
-                           :style="'width: ' + bar.value + '%'"></div>
-                    </div>
-                  </div>
-                </template>
-                <p x-show="acc.usage_error" class="text-[10px] text-red-500 font-mono" x-text="acc.usage_error"></p>
-              </div>
-
-              <!-- Footer Actions - Icon buttons like Antigravity -->
-              <div class="flex-none flex items-center justify-center pt-2 pb-1 border-t border-gray-100">
-                <div class="flex flex-wrap items-center justify-center gap-1">
-                  <!-- Switch -->
-                  <button
-                    @click="switchTo(acc)"
-                    :disabled="currentAccount?.uuid === acc.uuid || switchingId === acc.uuid"
-                    :class="currentAccount?.uuid === acc.uuid
-                      ? 'text-blue-600 bg-blue-50 cursor-not-allowed'
-                      : switchingId === acc.uuid
-                        ? 'text-blue-600 bg-blue-50 cursor-not-allowed'
-                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer'"
-                    class="p-1.5 rounded-lg transition-all"
-                    title="Switch to this account">
-                    <svg class="w-3.5 h-3.5" :class="switchingId === acc.uuid && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                    </svg>
-                  </button>
-                  <!-- Refresh -->
-                  <button
-                    @click="forceRefresh(acc)"
-                    :disabled="refreshingIds.has(acc.uuid)"
-                    :class="refreshingIds.has(acc.uuid)
-                      ? 'text-emerald-600 bg-emerald-50 cursor-not-allowed'
-                      : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 cursor-pointer'"
-                    class="p-1.5 rounded-lg transition-all"
-                    title="Refresh token">
-                    <svg class="w-3.5 h-3.5" :class="refreshingIds.has(acc.uuid) && 'animate-spin'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                  </button>
-                  <!-- Info / Details -->
-                  <button
-                    @click="showAccountDetails(acc)"
-                    class="p-1.5 text-gray-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-all cursor-pointer"
-                    title="Account details">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
-                    </svg>
-                  </button>
-                </div>
+              <div class="space-y-2">
+                <div class="h-2 bg-gray-100 rounded-full"></div>
+                <div class="h-2 bg-gray-100 rounded-full"></div>
               </div>
             </div>
           </template>
         </div>
-
-        <!-- Empty state -->
-        <template x-if="filteredAccounts.length === 0 && accounts.length > 0">
-          <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center">
-            <p class="text-gray-400 mb-2">No accounts match your search</p>
-          </div>
-        </template>
-        <template x-if="accounts.length === 0">
-          <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center">
-            <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
-            </svg>
-            <p class="text-gray-400 mb-2">No accounts yet</p>
-            <p class="text-sm text-gray-400">Click "Add Account" to get started</p>
-          </div>
-        </template>
-      </div>
-
-      <!-- ==================== SESSIONS ==================== -->
-      <div x-show="page === 'sessions'" x-cloak x-transition:enter="animate-fade-in">
-        <!-- Active sessions -->
-        <div class="mb-6">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Active Sessions
-          </h3>
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <template x-if="sessions.length === 0">
-              <div class="p-8 text-center">
-                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
-                <p class="text-sm text-gray-400">No active sessions</p>
-              </div>
-            </template>
-            <template x-if="sessions.length > 0">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50">
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Directory</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PID</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Started</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="s in sessions" :key="s.session_id">
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td class="px-4 py-2 font-medium text-gray-900" x-text="s.account_nickname || s.account_email || '-'"></td>
-                      <td class="px-4 py-2 text-gray-500 text-xs font-mono truncate max-w-[300px]" x-text="s.cwd"></td>
-                      <td class="px-4 py-2 text-gray-400 font-mono text-xs" x-text="s.pid"></td>
-                      <td class="px-4 py-2 text-gray-400 text-xs" x-text="formatTime(s.created_at)"></td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </template>
-          </div>
-        </div>
-
-        <!-- History -->
-        <div>
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Recent History
-          </h3>
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <template x-if="sessionHistory.length === 0">
-              <div class="p-8 text-center">
-                <p class="text-sm text-gray-400">No session history</p>
-              </div>
-            </template>
-            <template x-if="sessionHistory.length > 0">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50">
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Directory</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ended</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="s in sessionHistory" :key="s.session_id">
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td class="px-4 py-2 font-medium text-gray-900" x-text="s.account_nickname || s.account_email || '-'"></td>
-                      <td class="px-4 py-2 text-gray-500 text-xs font-mono truncate max-w-[300px]" x-text="s.cwd"></td>
-                      <td class="px-4 py-2 text-gray-400 font-mono text-xs" x-text="formatDuration(s.duration_seconds)"></td>
-                      <td class="px-4 py-2 text-gray-400 text-xs" x-text="formatTime(s.ended_at)"></td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <!-- ==================== SETTINGS ==================== -->
-      <div x-show="page === 'settings'" x-cloak x-transition:enter="animate-fade-in">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="p-1.5 bg-gray-50 rounded-md border border-gray-200">
-              <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">Settings</h3>
-              <p class="text-xs text-gray-400">Configuration options coming soon</p>
-            </div>
-          </div>
-          <p class="text-sm text-gray-400">Settings will be available in a future update.</p>
-        </div>
-      </div>
+      </template>
 
     </div>
   </main>
 
   <!-- ============ ACCOUNT DETAIL MODAL ============ -->
-  <div x-show="detailAccount" x-transition:enter="transition ease-out duration-200"
+  <div x-show="detailAccount" x-cloak
+       x-transition:enter="transition ease-out duration-200"
        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
        x-transition:leave="transition ease-in duration-150"
        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-       @click.self="detailAccount = null">
+       @click.self="detailAccount = null" @keydown.escape.window="detailAccount = null">
     <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md mx-4 overflow-hidden" x-show="detailAccount" x-transition>
       <div class="p-5">
         <div class="flex items-center justify-between mb-4">
@@ -527,7 +274,7 @@
             </div>
             <div class="flex items-center gap-2 text-sm" x-show="detailAccount?.nickname">
               <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-              <span class="text-gray-600" x-text="detailAccount?.nickname || '-'"></span>
+              <span class="text-gray-600" x-text="detailAccount?.nickname"></span>
             </div>
             <div class="flex items-center gap-2 text-sm">
               <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
@@ -541,7 +288,6 @@
                 <template x-if="!detailAccount?.has_claude_pro && !detailAccount?.has_claude_max"><span class="text-gray-500">FREE</span></template>
               </span>
             </div>
-            <!-- Usage bars in modal -->
             <div class="pt-2 space-y-2">
               <template x-for="bar in getUsageBars(detailAccount)" :key="bar.label">
                 <div>
@@ -561,58 +307,14 @@
     </div>
   </div>
 
-  <!-- ============ ADD ACCOUNT MODAL ============ -->
-  <div x-show="showAddModal" x-transition:enter="transition ease-out duration-200"
-       x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-       x-transition:leave="transition ease-in duration-150"
-       x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-       style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);"
-       @click.self="showAddModal = false" @keydown.escape.window="showAddModal = false">
-    <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden" style="width:100%;max-width:384px;margin:0 16px;" x-show="showAddModal" x-transition>
-      <div class="p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-base font-semibold text-gray-900">Add Account</h3>
-          <button @click="showAddModal = false" class="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <p class="text-xs text-gray-500 mb-3">A browser window will open for Google OAuth login.</p>
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nickname <span class="text-gray-400">(optional)</span></label>
-            <input type="text" x-model="addNickname" x-ref="addNicknameInput"
-                   @keydown.enter="confirmAddAccount()"
-                   placeholder="e.g. Work, Personal..."
-                   class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400">
-          </div>
-          <div class="flex gap-2 pt-1">
-            <button @click="showAddModal = false"
-                    class="flex-1 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-              Cancel
-            </button>
-            <button @click="confirmAddAccount()"
-                    :disabled="addingAccount"
-                    :class="addingAccount ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-600'"
-                    class="flex-1 px-3 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5">
-              <svg x-show="addingAccount" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              <span x-text="addingAccount ? 'Logging in...' : 'Continue'"></span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ============ TOAST ============ -->
-  <div x-show="toast.show" x-transition:enter="transition ease-out duration-300"
+  <div x-show="toast.show" x-cloak
+       x-transition:enter="transition ease-out duration-300"
        x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
        x-transition:leave="transition ease-in duration-200"
        x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
        class="fixed bottom-6 right-6 z-[100] max-w-sm rounded-xl shadow-2xl px-4 py-3 text-sm text-white font-medium flex items-center gap-2"
        :class="toast.type === 'error' ? 'bg-red-600' : toast.type === 'success' ? 'bg-emerald-600' : toast.type === 'warning' ? 'bg-amber-500' : 'bg-blue-600'">
-    <!-- Toast icon -->
     <template x-if="toast.type === 'success'">
       <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     </template>

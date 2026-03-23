@@ -38,16 +38,17 @@ def start_app(debug: bool = False):
 
     def on_loaded():
         """Initialize tray and notifications after window is ready."""
+        window.show()
+
         try:
             from .tray import TrayManager
 
             tray = TrayManager(window, api)
             tray.start()
 
-            # Override close to minimize to tray instead of quitting
             def on_closing():
                 tray.hide_window()
-                return False  # Cancel close
+                return False
 
             window.events.closing += on_closing
         except Exception as e:

@@ -247,7 +247,9 @@ class Api:
             'full_name': account.full_name,
             'has_claude_max': account.has_claude_max,
             'has_claude_pro': account.has_claude_pro,
+            'org_uuid': account.org_uuid,
             'org_name': account.org_name,
+            'org_type': account.org_type,
             'rate_limit_tier': account.rate_limit_tier,
         }
 
