@@ -63,6 +63,10 @@ jobs:
       - name: Build app
         run: python build/build.py
 
+      - name: Ad-hoc code sign
+        run: |
+          codesign --force --deep --sign - dist/AleSwitcher.app
+
       - name: Create DMG
         run: |
           hdiutil create -volname AleSwitcher \
