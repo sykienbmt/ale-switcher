@@ -468,6 +468,16 @@ class Store:
         # Invalidate accounts cache
         self._load_accounts_cache()
 
+    def delete_account(self, account_uuid: str):
+        """Delete account and all associated data."""
+        with self.conn:
+            cursor = self.conn.cursor()
+            cursor.execute('DELETE FROM usage_snapshots WHERE account_uuid = ?', (account_uuid,))
+            cursor.execute('DELETE FROM sessions WHERE account_uuid = ?', (account_uuid,))
+            cursor.execute('DELETE FROM accounts WHERE uuid = ?', (account_uuid,))
+
+        self._load_accounts_cache()
+
     # Usage operations
     def save_usage(self, account_uuid: str, usage_data: Dict):
         """Persist usage snapshot."""

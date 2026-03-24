@@ -88,6 +88,4 @@ class AccountService:
             if session.account_uuid == account.uuid:
                 self.store.mark_session_ended(session.session_id)
 
-        # Delete account (requires adding delete method to store)
-        # For now, this is a placeholder
-        raise NotImplementedError('Account deletion not yet implemented')
+        self.store.delete_account(account.uuid)

@@ -179,7 +179,11 @@ class SwitchingService:
         if not account:
             raise NoAccountsAvailable(f'Account not found: {identifier}')
 
-        refreshed_creds = self.credential_store.refresh_access_token(account.credentials_json)
+        try:
+            refreshed_creds = self.credential_store.refresh_access_token(account.credentials_json)
+        except Exception:
+            # Token refresh failed — use stored credentials as-is
+            refreshed_creds = account.get_credentials()
 
         if not token_only:
             self.credential_store.write_credentials_for_account(account, refreshed_creds)
@@ -187,7 +191,6 @@ class SwitchingService:
         # Update stored credentials if changed
         if refreshed_creds != account.get_credentials():
             self.store.update_credentials(account.uuid, refreshed_creds)
-            # Update in-memory Account so caller gets fresh credentials
             account.credentials_json = json.dumps(refreshed_creds)
 
         return account

@@ -14,6 +14,7 @@ function app() {
     switchingId: null,
     refreshingIds: new Set(),
     detailAccount: null,
+    confirmDeleteAccount: null,
     toast: { show: false, message: '', type: 'info' },
 
     // Computed: filtered accounts
@@ -30,8 +31,8 @@ function app() {
     async init() {
       await this.waitForBridge();
       this.ready = true;
-      await this.refreshAll();
-      this.refreshInterval = setInterval(() => this.refreshAll(), 60000);
+      await this.refreshAll(true);
+      this.refreshInterval = setInterval(() => this.refreshAll(true), 300000);
     },
 
     async waitForBridge() {
@@ -52,12 +53,12 @@ function app() {
     },
 
     // Data fetching
-    async refreshAll() {
+    async refreshAll(force = false) {
       if (this.loading) return;
       this.loading = true;
       try {
         await Promise.all([
-          this.loadAccounts(),
+          this.loadAccounts(force),
           this.loadCurrentAccount(),
         ]);
       } finally {
@@ -65,9 +66,9 @@ function app() {
       }
     },
 
-    async loadAccounts() {
+    async loadAccounts(force = false) {
       try {
-        const data = await window.pywebview.api.get_usage(false);
+        const data = await window.pywebview.api.get_usage(force);
         if (Array.isArray(data)) {
           this.accounts = data;
         } else if (data?.error) {
@@ -138,6 +139,7 @@ function app() {
     async loginOAuth() {
       if (this.loading) return;
       this.loading = true;
+      let success = false;
       try {
         const result = await window.pywebview.api.login_oauth(null);
         if (result.error) {
@@ -145,12 +147,21 @@ function app() {
         } else {
           const action = result.is_new ? 'added' : 'updated';
           this.showToast(`Account ${action}: ${result.account.email}`, 'success');
+          success = true;
         }
       } finally {
-        // Must set loading=false BEFORE calling refreshAll() to avoid the guard
         this.loading = false;
       }
-      await Promise.all([this.loadAccounts(), this.loadCurrentAccount()]);
+      // Force-refresh usage data after successful login to get fresh tokens
+      if (success) {
+        try {
+          const data = await window.pywebview.api.get_usage(true);
+          if (Array.isArray(data)) this.accounts = data;
+        } catch (e) { console.error('Failed to reload usage:', e); }
+      } else {
+        await this.loadAccounts();
+      }
+      await this.loadCurrentAccount();
     },
 
     async forceRefresh(acc) {
@@ -173,6 +184,27 @@ function app() {
 
     showAccountDetails(acc) {
       this.detailAccount = acc;
+      this.confirmDeleteAccount = null;
+    },
+
+    async deleteAccount(acc) {
+      if (!this.confirmDeleteAccount || this.confirmDeleteAccount !== acc.uuid) {
+        this.confirmDeleteAccount = acc.uuid;
+        return;
+      }
+      try {
+        const result = await window.pywebview.api.delete_account(String(acc.index));
+        if (result.error) {
+          this.showToast('Delete failed: ' + result.error, 'error');
+        } else {
+          this.showToast('Account removed: ' + (acc.nickname || acc.email), 'success');
+          this.detailAccount = null;
+          if (this.currentAccount?.uuid === acc.uuid) this.currentAccount = null;
+          await this.loadAccounts();
+        }
+      } finally {
+        this.confirmDeleteAccount = null;
+      }
     },
 
     // Helpers
@@ -197,6 +229,14 @@ function app() {
         });
       }
       return bars;
+    },
+
+    isAuthError(err) {
+      if (!err) return false;
+      const lower = err.toLowerCase();
+      return lower.includes('401') || lower.includes('403') || lower.includes('unauthorized')
+        || lower.includes('token') || lower.includes('expired') || lower.includes('revoked')
+        || lower.includes('re-authenticate');
     },
 
     usageColorClass(val) {

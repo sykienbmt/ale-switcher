@@ -197,6 +197,15 @@ class Api:
         except Exception as e:
             return {'error': str(e)}
 
+    def delete_account(self, identifier: str) -> Dict[str, Any]:
+        try:
+            account_service = self._factory.get_account_service()
+            account_service.remove_account(identifier)
+            return {'success': True}
+        except Exception as e:
+            traceback.print_exc()
+            return {'error': str(e)}
+
     def _fetch_account_usage(self, account, force: bool = False) -> Dict[str, Any]:
         try:
             result = self._account_to_dict(account)
