@@ -21,6 +21,12 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller pyinstaller-hooks-contrib
 
+      - name: Sync version to installer
+        run: |
+          $ver = python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"
+          (Get-Content build/installer.iss) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$ver`"" | Set-Content build/installer.iss
+        shell: pwsh
+
       - name: Build exe
         run: python build/build.py
 
