@@ -104,7 +104,11 @@ function app() {
         const id = String(acc.index);
         const result = await window.pywebview.api.switch_account(id);
         if (result.error) {
-          this.showToast('Switch failed: ' + result.error, 'error');
+          if (this.isAuthError(result.error)) {
+            this.showToast('Token expired - please re-login this account first', 'warning');
+          } else {
+            this.showToast('Switch failed: ' + result.error, 'error');
+          }
         } else {
           this.currentAccount = result.account;
           this.showToast('Switched to ' + (result.account.nickname || result.account.email), 'success');

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Set, Tuple
 
 from ..constants import CACHE_TTL_SECONDS, console
-from ..core.errors import NoAccountsAvailable, UsageFetchError
+from ..core.errors import NoAccountsAvailable, TokenUnavailable, UsageFetchError
 from ..core.load_balancing import (
     build_candidate,
     needs_refresh,
@@ -181,9 +181,11 @@ class SwitchingService:
 
         try:
             refreshed_creds = self.credential_store.refresh_access_token(account.credentials_json)
-        except Exception:
-            # Token refresh failed — use stored credentials as-is
-            refreshed_creds = account.get_credentials()
+        except Exception as e:
+            raise TokenUnavailable(
+                f'Token expired for {account.nickname or account.email}. '
+                f'Please re-login this account first.'
+            ) from e
 
         if not token_only:
             self.credential_store.write_credentials_for_account(account, refreshed_creds)
